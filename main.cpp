@@ -12,54 +12,77 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
-int directoryExists(string& dirName, bool& validFile) {
+struct AnalysisInfo {
+	string label;
+	vector<string> images;
+};
+
+void directoryExists(string& dirName, bool& validFile) {
 	if (!((fs::exists(dirName)) && (fs::is_directory(dirName)))) {
-		cout << "not a directory, exiting..." << endl;
+		cout << "Not a directory, exiting..." << endl;
 			validFile = false;
-			return 1;
+			return;
 		}
 };
 
-int analyzeJpeg(string& dirName, bool& validFile, vector<string>& results) {
+void analyzeJpeg(string dirName, bool& validFile, vector<AnalysisInfo>& results) {
 	for (auto &entry : fs::directory_iterator(dirName)) {
 			if (fs::is_regular_file(entry)) {
 				string filename = entry.path().string();
 	
 				//looks out for the ".jpg" extension
 				if (entry.path().extension() == ".jpg") {
-					cout << filename << endl;
+					cout << "analyzing '" << filename << "'..." << endl;
 	
 					//Initiate a rekognition object
 					Rekognition rekognition;
 					vector<Rekognition::LabelInfo> rekognitionLabels = rekognition.getLabels(filename, validFile);
 
-					//Iterates through the list of structs and prints the label and confidence level/percentage
+					cout << "# of labels identified: " << rekognitionLabels.size() << endl;
+
+					//Iterates through the list of structs and prints the label and confidence level/percentage and file name
 					if (!validFile) {
-							cout << "invalid image file!" << endl;
-							return 1;
+							cout << "** invalid image file! **" << endl;
+							return;
 							
 						} else {
 							for (const auto &labelInfo : rekognitionLabels) {
-								if (find(results.begin(),results.end(), labelInfo.label) == results.end()) {
-								results.push_back(labelInfo.label); //vector of labels only
-							        }
-						}
-					}
+							bool found = false;
+								for (AnalysisInfo& info : results) {
+									if (info.label == labelInfo.label) {
+										if (find(info.images.begin(),info.images.end(), filename) == info.images.end()){
+										info.images.push_back(filename);
+										}
+										found = true;
+										break;
+									}
+								}
+								
+								
+								if (!found) {
+									AnalysisInfo newInfo;
+									newInfo.label = labelInfo.label;
+									newInfo.images.push_back(filename);
+									results.push_back(newInfo); //vector of labels only
+								}
+								
+							        					}
+							}
+													}
 	 			}
 			}
-		}
-		return 0;
-	};
+			};
 
 int main() {
 	cout <<"** starting **" << endl;
-
 	cout << "Enter a directory name (or '.' for current directory)" << endl;
+	
 	string dirName;
 	bool validFile = true;
 	cin >> dirName;
+	
 	vector<Rekognition::LabelInfo> rekognitionLabels;
-	vector<string> results;
+	vector<AnalysisInfo> results;
 	
 	
 	//string filename = "degu.jpg";
@@ -68,16 +91,27 @@ int main() {
 	//To confirm that the given directory actually exists
 	directoryExists(dirName, validFile);
 	
-	//Iterate through each file in the provided directory, process and return the labels for each image.
+	//Iterate through each file in the provided directory, process each image.
 	analyzeJpeg(dirName, validFile, results);
 
-	//sorts the labels in alphabetical order
-	sort(results.begin(), results.end());
 
-	for (const string& label: results) {
-		cout << label << endl;
+	// Sort results by label alphabetically
+	sort(results.begin(), results.end(),
+	[](AnalysisInfo info1, AnalysisInfo info2) {
+		return info1.label < info2.label;
+	});
+	//print the results
+	cout << "\nLabel: image(s)" << endl;
+	for (const AnalysisInfo& info : results) {
+		cout << info.label << ": ";
+
+		for (const string& img : info.images) {
+			cout << img << " ";
+		}
+		cout << endl;
 	}
 
+	cout << "** done **" << endl;
 	
 	return 0;
 };
