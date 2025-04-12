@@ -40,10 +40,12 @@ int analyzeJpeg(string& dirName, bool& validFile, vector<string>& results) {
 							
 						} else {
 							for (const auto &labelInfo : rekognitionLabels) {
+								if (find(results.begin(),results.end(), labelInfo.label) == results.end()) {
 								results.push_back(labelInfo.label); //vector of labels only
 							        }
 						}
-				}
+					}
+	 			}
 			}
 		}
 		return 0;
