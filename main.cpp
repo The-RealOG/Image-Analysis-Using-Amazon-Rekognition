@@ -1,4 +1,11 @@
-//imports the necessary libraries
+/*main.cpp*/
+//This program analyzes JPG files using Rekognition, extarcts label info from each image and outputs the sorted results in a table linking
+//each label to their corresponding images.
+
+//Chibueze Anyachebelu
+//Northwestern University
+
+//imports the necessary header files for this project to compile smoothly
 #include "rekognition.h"
 #include <iostream>
 #include <vector>
@@ -12,20 +19,23 @@ using namespace std;
 
 namespace fs = std::filesystem;
 
+//struct to store the label and corresponding image files
 struct AnalysisInfo {
 	string label;
 	vector<string> images;
 };
 
-void directoryExists(string& dirName, bool& validFile) {
+//Checks if a given directory name is valid
+int directoryExists(string& dirName, bool& validFile) {
 	if (!((fs::exists(dirName)) && (fs::is_directory(dirName)))) {
 		cout << "Not a directory, exiting..." << endl;
 			validFile = false;
-			return;
+			return 0;
 		}
 };
 
-void analyzeJpeg(string dirName, bool& validFile, vector<AnalysisInfo>& results) {
+//Analyzes the images and stores the required info
+int analyzeJpeg(string dirName, bool& validFile, vector<AnalysisInfo>& results) {
 	for (auto &entry : fs::directory_iterator(dirName)) {
 			if (fs::is_regular_file(entry)) {
 				string filename = entry.path().string();
@@ -43,7 +53,7 @@ void analyzeJpeg(string dirName, bool& validFile, vector<AnalysisInfo>& results)
 					//Iterates through the list of structs and prints the label and confidence level/percentage and file name
 					if (!validFile) {
 							cout << "** invalid image file! **" << endl;
-							return;
+							return 0;
 							
 						} else {
 							for (const auto &labelInfo : rekognitionLabels) {
@@ -58,7 +68,7 @@ void analyzeJpeg(string dirName, bool& validFile, vector<AnalysisInfo>& results)
 									}
 								}
 								
-								
+								//creates a new copy should the label not be in the results vector
 								if (!found) {
 									AnalysisInfo newInfo;
 									newInfo.label = labelInfo.label;
@@ -75,12 +85,14 @@ void analyzeJpeg(string dirName, bool& validFile, vector<AnalysisInfo>& results)
 
 int main() {
 	cout <<"** starting **" << endl;
-	cout << "Enter a directory name (or '.' for current directory)" << endl;
-	
+	cout << "Enter a directory name (or '.' for current directory)>" << endl;
+
+	//Prompts user to input their preferred directory name
 	string dirName;
 	bool validFile = true;
 	cin >> dirName;
-	
+
+	//store the results in label-image format
 	vector<Rekognition::LabelInfo> rekognitionLabels;
 	vector<AnalysisInfo> results;
 	
@@ -90,6 +102,11 @@ int main() {
 
 	//To confirm that the given directory actually exists
 	directoryExists(dirName, validFile);
+
+	//In case an invalid dir is passed, it exits the program
+	if (!validFile) {
+		return 0;
+	}
 	
 	//Iterate through each file in the provided directory, process each image.
 	analyzeJpeg(dirName, validFile, results);
@@ -100,6 +117,8 @@ int main() {
 	[](AnalysisInfo info1, AnalysisInfo info2) {
 		return info1.label < info2.label;
 	});
+
+	
 	//print the results
 	cout << "\nLabel: image(s)" << endl;
 	for (const AnalysisInfo& info : results) {
@@ -113,5 +132,5 @@ int main() {
 
 	cout << "** done **" << endl;
 	
-	return 0;
+	return 0;  //code completed
 };
