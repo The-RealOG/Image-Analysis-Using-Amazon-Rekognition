@@ -25,11 +25,11 @@ Using Amazon's Rekognition service, the program analyzes a set of images and ext
 
 📌 Concepts used in this project:
 
-Image processing
+* Image processing
 
-Structs & vectors
+* Structs & vectors
 
-Basic file system traversal
+* Basic file system traversal
 
-API interaction via libraries
+* API interaction via libraries
 
