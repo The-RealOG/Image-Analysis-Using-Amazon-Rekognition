@@ -58,6 +58,7 @@ int analyzeJpeg(string dirName, bool& validFile, vector<AnalysisInfo>& results) 
 						} else {
 							for (const auto &labelInfo : rekognitionLabels) {
 							bool found = false;
+								//checks if the label is alraeady in vector of structs
 								for (AnalysisInfo& info : results) {
 									if (info.label == labelInfo.label) {
 										if (find(info.images.begin(),info.images.end(), filename) == info.images.end()){
